@@ -13,40 +13,21 @@ import {
   TrendingUp,
   X,
 } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const navItems = [
-  {
-    title: 'Dashboard',
-    href: '/dashboard',
-    icon: LayoutDashboard,
-  },
+  { title: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   {
     title: 'Transactions',
     href: '/dashboard/transactions',
     icon: ArrowRightLeft,
   },
-  {
-    title: 'Budgets',
-    href: '/dashboard/budgets',
-    icon: PiggyBank,
-  },
-  {
-    title: 'Categories',
-    href: '/dashboard/categories',
-    icon: Tag,
-  },
-  {
-    title: 'Analytics',
-    href: '/dashboard/analytics',
-    icon: TrendingUp,
-  },
-  {
-    title: 'AI Insights',
-    href: '/dashboard/insights',
-    icon: Sparkles,
-  },
+  { title: 'Budgets', href: '/dashboard/budgets', icon: PiggyBank },
+  { title: 'Categories', href: '/dashboard/categories', icon: Tag },
+  { title: 'Analytics', href: '/dashboard/analytics', icon: TrendingUp },
+  { title: 'AI Insights', href: '/dashboard/insights', icon: Sparkles },
 ];
 
 interface SidebarProps {
@@ -61,8 +42,14 @@ export function Sidebar({ onClose }: SidebarProps) {
       {/* Logo */}
       <div className="flex items-center justify-between px-4 py-5">
         <Link href="/dashboard" className="flex items-center gap-2.5 group">
-          <div className="w-8 h-8 rounded-lg brand-gradient flex items-center justify-center shadow-lg shadow-primary/20 group-hover:shadow-primary/40 transition-shadow">
-            <TrendingUp className="w-4 h-4 text-white" />
+          <div className="w-8 h-8 rounded-xl overflow-hidden ring-2 ring-primary/20 group-hover:ring-primary/40 transition-all shrink-0">
+            <Image
+              src="/logo.png"
+              alt="WealthFlow"
+              width={32}
+              height={32}
+              className="object-cover"
+            />
           </div>
           <span className="font-bold text-lg tracking-tight text-sidebar-foreground">
             Wealth<span className="text-primary">Flow</span>
