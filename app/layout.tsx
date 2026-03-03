@@ -1,3 +1,4 @@
+import { AuthProvider } from '@/components/auth-provider';
 import { ThemeProvider } from '@/components/theme-provider';
 import type { Metadata } from 'next';
 import { Plus_Jakarta_Sans } from 'next/font/google';
@@ -80,7 +81,7 @@ export default function RootLayout({
           defaultTheme="dark"
           enableSystem
           disableTransitionOnChange>
-          {children}
+          <AuthProvider>{children}</AuthProvider>
         </ThemeProvider>
       </body>
     </html>

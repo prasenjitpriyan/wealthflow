@@ -14,15 +14,24 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
-import { Bell, Menu, Search } from 'lucide-react';
+import { Bell, LogOut, Menu, Search, Settings, User } from 'lucide-react';
+import { signOut, useSession } from 'next-auth/react';
+import Link from 'next/link';
 import { useState } from 'react';
 
-interface HeaderProps {
-  title?: string;
-}
-
-export function Header({ title }: HeaderProps) {
+export function Header() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { data: session } = useSession();
+
+  const user = session?.user;
+  const initials = user?.name
+    ? user.name
+        .split(' ')
+        .map((n) => n[0])
+        .join('')
+        .slice(0, 2)
+        .toUpperCase()
+    : 'WF';
 
   return (
     <>
@@ -36,13 +45,6 @@ export function Header({ title }: HeaderProps) {
             onClick={() => setSidebarOpen(true)}>
             <Menu className="h-5 w-5" />
           </Button>
-
-          {/* Page title */}
-          {title && (
-            <h1 className="text-base font-semibold text-foreground hidden sm:block">
-              {title}
-            </h1>
-          )}
 
           {/* Search */}
           <div className="relative ml-0 sm:ml-4 flex-1 max-w-xs hidden md:flex">
@@ -70,20 +72,47 @@ export function Header({ title }: HeaderProps) {
                   variant="ghost"
                   className="relative h-9 w-9 rounded-full">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src="/avatar.png" alt="User" />
+                    <AvatarImage
+                      src={user?.image ?? ''}
+                      alt={user?.name ?? 'User'}
+                    />
                     <AvatarFallback className="brand-gradient text-white text-xs font-semibold">
-                      WF
+                      {initials}
                     </AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuContent align="end" className="w-52">
+                <DropdownMenuLabel className="font-normal">
+                  <p className="text-sm font-semibold">
+                    {user?.name ?? 'User'}
+                  </p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {user?.email ?? ''}
+                  </p>
+                </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>Profile</DropdownMenuItem>
-                <DropdownMenuItem>Settings</DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link
+                    href="/dashboard/settings"
+                    className="flex items-center gap-2">
+                    <User className="w-4 h-4" />
+                    Profile
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link
+                    href="/dashboard/settings"
+                    className="flex items-center gap-2">
+                    <Settings className="w-4 h-4" />
+                    Settings
+                  </Link>
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-destructive">
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive flex items-center gap-2 cursor-pointer"
+                  onClick={() => signOut({ callbackUrl: '/login' })}>
+                  <LogOut className="w-4 h-4" />
                   Sign out
                 </DropdownMenuItem>
               </DropdownMenuContent>
