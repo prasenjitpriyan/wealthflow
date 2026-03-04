@@ -1,4 +1,6 @@
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { LandingFooter } from '@/components/layout/landing-footer';
+import { LandingNavbar } from '@/components/layout/landing-navbar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,85 +13,8 @@ import {
   TrendingUp,
   Zap,
 } from 'lucide-react';
-import { getServerSession, Session } from 'next-auth';
-import Image from 'next/image';
+import { getServerSession } from 'next-auth';
 import Link from 'next/link';
-
-// ─── Navbar ───────────────────────────────────────────────────────────────────
-
-function Navbar({ session }: { session: Session | null }) {
-  return (
-    <nav className="fixed top-0 inset-x-0 z-50 border-b border-white/5 bg-background/80 backdrop-blur-xl">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="w-8 h-8 rounded-xl overflow-hidden ring-2 ring-primary/20 group-hover:ring-primary/50 transition-all">
-            <Image
-              src="/logo.png"
-              alt="WealthFlow Logo"
-              width={32}
-              height={32}
-              className="object-cover"
-            />
-          </div>
-          <span className="font-bold text-lg tracking-tight">
-            Wealth<span className="text-primary">Flow</span>
-          </span>
-        </Link>
-
-        {/* Nav links */}
-        <div className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
-          <Link
-            href="#features"
-            className="hover:text-foreground transition-colors">
-            Features
-          </Link>
-          <Link
-            href="#pricing"
-            className="hover:text-foreground transition-colors">
-            Pricing
-          </Link>
-          <Link
-            href="#about"
-            className="hover:text-foreground transition-colors">
-            About
-          </Link>
-        </div>
-
-        {/* CTA buttons */}
-        <div className="flex items-center gap-2">
-          {session ? (
-            <>
-              <Link href="/dashboard">
-                <Button variant="ghost" size="sm" className="hidden sm:flex">
-                  Dashboard
-                </Button>
-              </Link>
-              <Link href="/api/auth/signout">
-                <Button size="sm" variant="outline" className="gap-1.5">
-                  Sign out
-                </Button>
-              </Link>
-            </>
-          ) : (
-            <>
-              <Link href="/login">
-                <Button variant="ghost" size="sm" className="hidden sm:flex">
-                  Sign in
-                </Button>
-              </Link>
-              <Link href="/register">
-                <Button size="sm" className="gap-1.5">
-                  Get started <ArrowRight className="w-3.5 h-3.5" />
-                </Button>
-              </Link>
-            </>
-          )}
-        </div>
-      </div>
-    </nav>
-  );
-}
 
 // ─── Hero Section ─────────────────────────────────────────────────────────────
 
@@ -148,7 +73,7 @@ function Hero() {
               Start for free <ArrowRight className="w-4 h-4" />
             </Button>
           </Link>
-          <Link href="#preview">
+          <Link href="/demo">
             <Button
               variant="outline"
               size="lg"
@@ -442,46 +367,6 @@ function Pricing() {
   );
 }
 
-// ─── Footer ───────────────────────────────────────────────────────────────────
-
-function Footer() {
-  return (
-    <footer className="border-t border-border/30 py-10 px-4 sm:px-6">
-      <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-lg overflow-hidden">
-            <Image
-              src="/logo.png"
-              alt="WealthFlow"
-              width={24}
-              height={24}
-              className="object-cover"
-            />
-          </div>
-          <span className="text-sm font-semibold">
-            Wealth<span className="text-primary">Flow</span>
-          </span>
-        </div>
-        <p className="text-xs text-muted-foreground text-center">
-          © {new Date().getFullYear()} WealthFlow. Built with ❤️ for your
-          financial future.
-        </p>
-        <div className="flex items-center gap-4 text-xs text-muted-foreground">
-          <Link href="#" className="hover:text-foreground transition-colors">
-            Privacy
-          </Link>
-          <Link href="#" className="hover:text-foreground transition-colors">
-            Terms
-          </Link>
-          <Link href="#" className="hover:text-foreground transition-colors">
-            Contact
-          </Link>
-        </div>
-      </div>
-    </footer>
-  );
-}
-
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default async function LandingPage() {
@@ -489,12 +374,12 @@ export default async function LandingPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar session={session} />
+      <LandingNavbar session={session} />
       <Hero />
       <Stats />
       <Features />
       <Pricing />
-      <Footer />
+      <LandingFooter />
     </div>
   );
 }
