@@ -1,10 +1,11 @@
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["driverAdapters"]
+  previewFeatures = ["driverAdapters", "multiSchema"]
 }
 
 datasource db {
   provider = "postgresql"
+  schemas  = ["public", "auth"]
 }
 
 // ─── NextAuth Models ───────────────────────────────────────────────────────
@@ -26,6 +27,7 @@ model Account {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@schema("public")
 }
 
 model Session {
@@ -34,6 +36,7 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@schema("public")
 }
 
 model VerificationToken {
@@ -42,6 +45,7 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+  @@schema("public")
 }
 
 // ─── User ────────────────────────────────────────────────────────────────
@@ -64,6 +68,7 @@ model User {
   budgets              Budget[]
   recurringTransactions RecurringTransaction[]
   financialAccounts    FinancialAccount[]
+  @@schema("public")
 }
 
 // ─── Financial Account ───────────────────────────────────────────────────
@@ -82,6 +87,7 @@ model FinancialAccount {
 
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   transactions Transaction[]
+  @@schema("public")
 }
 
 enum AccountType {
@@ -90,6 +96,7 @@ enum AccountType {
   CREDIT
   INVESTMENT
   SAVINGS
+  @@schema("public")
 }
 
 // ─── Category ────────────────────────────────────────────────────────────
@@ -106,6 +113,7 @@ model Category {
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   transactions Transaction[]
   budgets      Budget[]
+  @@schema("public")
 }
 
 // ─── Transaction ─────────────────────────────────────────────────────────
@@ -128,12 +136,14 @@ model Transaction {
   user     User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   account  FinancialAccount? @relation(fields: [accountId], references: [id], onDelete: SetNull)
   category Category?         @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  @@schema("public")
 }
 
 enum TransactionType {
   INCOME
   EXPENSE
   TRANSFER
+  @@schema("public")
 }
 
 // ─── Budget ─────────────────────────────────────────────────────────────
@@ -152,6 +162,7 @@ model Budget {
 
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  @@schema("public")
 }
 
 enum BudgetPeriod {
@@ -159,6 +170,7 @@ enum BudgetPeriod {
   MONTHLY
   QUARTERLY
   YEARLY
+  @@schema("public")
 }
 
 // ─── Recurring Transaction ───────────────────────────────────────────────
@@ -181,6 +193,7 @@ model RecurringTransaction {
   updatedAt   DateTime        @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@schema("public")
 }
 
 enum Frequency {
@@ -190,4 +203,5 @@ enum Frequency {
   MONTHLY
   QUARTERLY
   YEARLY
+  @@schema("public")
 }
