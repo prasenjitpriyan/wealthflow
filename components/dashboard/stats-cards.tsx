@@ -14,12 +14,10 @@ interface Stats {
   expensesChange: number | null;
 }
 
-function fmt(n: number) {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits: 0,
-  }).format(n);
+import { formatCurrency } from '@/lib/currency';
+import { useSession } from 'next-auth/react';
+function fmt(n: number, currency: string = 'INR') {
+  return formatCurrency(n, currency);
 }
 
 function ChangeLabel({
@@ -49,6 +47,7 @@ function ChangeLabel({
 }
 
 export function StatsCards() {
+  const { data: session } = useSession();
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -67,13 +66,15 @@ export function StatsCards() {
   const cards = [
     {
       title: 'Monthly Income',
-      value: loading ? null : fmt(stats?.income ?? 0),
+      value: loading ? null : fmt(stats?.income ?? 0, session?.user?.currency),
       extra: <ChangeLabel value={stats?.incomeChange ?? null} better="up" />,
       icon: <ArrowUpRight className="w-4 h-4 text-emerald-500" />,
     },
     {
       title: 'Monthly Expenses',
-      value: loading ? null : fmt(stats?.expenses ?? 0),
+      value: loading
+        ? null
+        : fmt(stats?.expenses ?? 0, session?.user?.currency),
       extra: (
         <ChangeLabel value={stats?.expensesChange ?? null} better="down" />
       ),
@@ -81,7 +82,7 @@ export function StatsCards() {
     },
     {
       title: 'Net Savings',
-      value: loading ? null : fmt(stats?.savings ?? 0),
+      value: loading ? null : fmt(stats?.savings ?? 0, session?.user?.currency),
       extra: (
         <p className="text-xs mt-1 text-muted-foreground">
           {stats?.savingsRate ?? 0}% savings rate

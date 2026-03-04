@@ -20,8 +20,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { formatCurrency } from '@/lib/currency';
 import { cn } from '@/lib/utils';
 import { AlertTriangle, Loader2, PiggyBank, Plus, Trash2 } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 
 interface Category {
@@ -49,6 +51,7 @@ const defaultForm = {
 };
 
 export function BudgetsList() {
+  const { data: session } = useSession();
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -69,6 +72,7 @@ export function BudgetsList() {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchData();
   }, []);
 
@@ -102,17 +106,17 @@ export function BudgetsList() {
         {[
           {
             label: 'Total Budgeted',
-            value: `$${totalBudgeted.toLocaleString()}`,
+            value: formatCurrency(totalBudgeted, session?.user?.currency),
             cls: '',
           },
           {
             label: 'Total Spent',
-            value: `$${totalSpent.toLocaleString()}`,
+            value: formatCurrency(totalSpent, session?.user?.currency),
             cls: totalSpent > totalBudgeted ? 'text-red-500' : '',
           },
           {
             label: 'Remaining',
-            value: `$${Math.abs(totalBudgeted - totalSpent).toLocaleString()}${totalBudgeted - totalSpent < 0 ? ' over' : ''}`,
+            value: `${formatCurrency(Math.abs(totalBudgeted - totalSpent), session?.user?.currency)}${totalBudgeted - totalSpent < 0 ? ' over' : ''}`,
             cls:
               totalBudgeted - totalSpent < 0
                 ? 'text-red-500'
@@ -181,7 +185,7 @@ export function BudgetsList() {
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <Label>Amount ($)</Label>
+                      <Label>Amount ({session?.user?.currency || 'INR'})</Label>
                       <Input
                         className="h-8"
                         type="number"
@@ -289,8 +293,15 @@ export function BudgetsList() {
                             {budget.category?.name ?? 'Budget'}
                           </p>
                           <p className="text-xs text-muted-foreground mt-0.5">
-                            ${budget.spent.toLocaleString()} of $
-                            {budget.amount.toLocaleString()}
+                            {formatCurrency(
+                              budget.spent,
+                              session?.user?.currency
+                            )}{' '}
+                            of{' '}
+                            {formatCurrency(
+                              budget.amount,
+                              session?.user?.currency
+                            )}
                           </p>
                         </div>
                       </div>
@@ -303,8 +314,8 @@ export function BudgetsList() {
                             !isOver && pct >= 80,
                         })}>
                         {isOver
-                          ? `$${Math.abs(remaining).toFixed(0)} over`
-                          : `$${remaining.toFixed(0)} left`}
+                          ? `${formatCurrency(Math.abs(remaining), session?.user?.currency)} over`
+                          : `${formatCurrency(remaining, session?.user?.currency)} left`}
                       </Badge>
                     </div>
 

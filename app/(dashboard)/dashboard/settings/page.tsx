@@ -32,7 +32,10 @@ export default function SettingsPage() {
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (session?.user?.name) setName(session.user.name);
+
+    if (session?.user?.currency) setCurrency(session.user.currency);
   }, [session]);
 
   async function handleSave(e: React.FormEvent) {
@@ -44,7 +47,7 @@ export default function SettingsPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, currency }),
     }).catch(() => {});
-    await update({ name }); // refresh session
+    await update({ name, currency }); // refresh session
     setSaving(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);

@@ -38,20 +38,28 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           name: user.name,
           image: user.image,
+          currency: user.currency,
         };
       },
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
+        token.currency =
+          (user as import('next-auth').User & { currency?: string }).currency ||
+          'INR';
+      }
+      if (trigger === 'update' && session?.currency) {
+        token.currency = session.currency;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
+        session.user.currency = (token.currency as string) || 'INR';
       }
       return session;
     },

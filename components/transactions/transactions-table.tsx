@@ -34,6 +34,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
+import { formatCurrency } from '@/lib/currency';
 import { cn } from '@/lib/utils';
 import {
   ArrowDownRight,
@@ -44,6 +45,7 @@ import {
   Plus,
   Search,
 } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 
 interface Category {
@@ -83,6 +85,7 @@ const defaultForm: {
 };
 
 export function TransactionsTable() {
+  const { data: session } = useSession();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -105,6 +108,7 @@ export function TransactionsTable() {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchData();
   }, []);
 
@@ -195,7 +199,7 @@ export function TransactionsTable() {
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <Label>Amount ($)</Label>
+                      <Label>Amount ({session?.user?.currency || 'INR'})</Label>
                       <Input
                         className="h-8"
                         type="number"
@@ -376,8 +380,12 @@ export function TransactionsTable() {
                       ) : (
                         <ArrowDownRight className="w-3.5 h-3.5 text-red-400" />
                       )}
-                      {tx.type === 'INCOME' ? '+' : '-'}$
-                      {Number(tx.amount).toFixed(2)}
+                      {tx.type === 'INCOME' ? '+' : '-'}
+                      {formatCurrency(
+                        Number(tx.amount),
+                        session?.user?.currency,
+                        2
+                      )}
                     </div>
                   </TableCell>
                   <TableCell className="pr-4 w-10">

@@ -1,3 +1,4 @@
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -10,12 +11,13 @@ import {
   TrendingUp,
   Zap,
 } from 'lucide-react';
+import { getServerSession, Session } from 'next-auth';
 import Image from 'next/image';
 import Link from 'next/link';
 
 // ─── Navbar ───────────────────────────────────────────────────────────────────
 
-function Navbar() {
+function Navbar({ session }: { session: Session | null }) {
   return (
     <nav className="fixed top-0 inset-x-0 z-50 border-b border-white/5 bg-background/80 backdrop-blur-xl">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
@@ -56,14 +58,33 @@ function Navbar() {
 
         {/* CTA buttons */}
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" className="hidden sm:flex">
-            Sign in
-          </Button>
-          <Link href="/dashboard">
-            <Button size="sm" className="gap-1.5">
-              Get started <ArrowRight className="w-3.5 h-3.5" />
-            </Button>
-          </Link>
+          {session ? (
+            <>
+              <Link href="/dashboard">
+                <Button variant="ghost" size="sm" className="hidden sm:flex">
+                  Dashboard
+                </Button>
+              </Link>
+              <Link href="/api/auth/signout">
+                <Button size="sm" variant="outline" className="gap-1.5">
+                  Sign out
+                </Button>
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link href="/login">
+                <Button variant="ghost" size="sm" className="hidden sm:flex">
+                  Sign in
+                </Button>
+              </Link>
+              <Link href="/register">
+                <Button size="sm" className="gap-1.5">
+                  Get started <ArrowRight className="w-3.5 h-3.5" />
+                </Button>
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </nav>
@@ -74,7 +95,7 @@ function Navbar() {
 
 function Hero() {
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-32 pb-16">
       {/* Ambient glow background */}
       <div className="absolute inset-0 -z-10">
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-primary/15 rounded-full blur-[120px]" />
@@ -161,18 +182,18 @@ function Hero() {
                 {[
                   {
                     label: 'Total Balance',
-                    value: '$24,563',
+                    value: '₹24,563',
                     color: 'text-foreground',
                   },
                   {
                     label: 'Monthly Income',
-                    value: '$8,200',
+                    value: '₹8,200',
                     color: 'text-emerald-400',
                   },
-                  { label: 'Expenses', value: '$4,830', color: 'text-red-400' },
+                  { label: 'Expenses', value: '₹4,830', color: 'text-red-400' },
                   {
                     label: 'Net Savings',
-                    value: '$3,369',
+                    value: '₹3,369',
                     color: 'text-primary',
                   },
                 ].map((s) => (
@@ -310,7 +331,7 @@ function Stats() {
       <div className="max-w-4xl mx-auto grid grid-cols-2 sm:grid-cols-4 gap-8 text-center">
         {[
           { value: '12K+', label: 'Active users' },
-          { value: '$2.4M', label: 'Tracked monthly' },
+          { value: '₹2.4M', label: 'Tracked monthly' },
           { value: '98%', label: 'Satisfaction rate' },
           { value: '4.9★', label: 'Average rating' },
         ].map((stat) => (
@@ -352,7 +373,7 @@ function Pricing() {
             <p className="text-sm font-semibold text-muted-foreground mb-2">
               Free
             </p>
-            <p className="text-4xl font-extrabold mb-1">$0</p>
+            <p className="text-4xl font-extrabold mb-1">₹0</p>
             <p className="text-sm text-muted-foreground mb-6">Forever free</p>
             <ul className="space-y-2.5 mb-8">
               {[
@@ -384,7 +405,7 @@ function Pricing() {
               </Badge>
             </div>
             <p className="text-4xl font-extrabold mb-1">
-              $9
+              ₹99
               <span className="text-lg font-medium text-muted-foreground">
                 /mo
               </span>
@@ -461,10 +482,12 @@ function Footer() {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const session = await getServerSession(authOptions);
+
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+      <Navbar session={session} />
       <Hero />
       <Stats />
       <Features />
