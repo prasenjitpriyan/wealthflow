@@ -148,12 +148,14 @@ function Hero() {
               Start for free <ArrowRight className="w-4 h-4" />
             </Button>
           </Link>
-          <Button
-            variant="outline"
-            size="lg"
-            className="px-8 h-12 text-base border-border/60 hover:bg-muted/50">
-            View demo
-          </Button>
+          <Link href="#preview">
+            <Button
+              variant="outline"
+              size="lg"
+              className="px-8 h-12 text-base border-border/60 hover:bg-muted/50">
+              View demo
+            </Button>
+          </Link>
         </div>
 
         {/* Social proof */}
@@ -162,7 +164,7 @@ function Hero() {
         </p>
 
         {/* Dashboard preview mockup */}
-        <div className="mt-16 relative">
+        <div id="preview" className="mt-16 relative scroll-mt-24">
           <div className="relative rounded-2xl border border-white/10 bg-card/60 backdrop-blur-sm shadow-2xl shadow-black/40 overflow-hidden">
             <div className="flex items-center gap-1.5 px-4 py-3 border-b border-white/5">
               <div className="w-3 h-3 rounded-full bg-red-500/70" />
