@@ -63,7 +63,9 @@ export default function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-sm space-y-8">
         {/* Logo */}
-        <div className="flex flex-col items-center gap-3">
+        <Link
+          href="/"
+          className="flex flex-col items-center gap-3 hover:opacity-90 transition-opacity">
           <div className="w-12 h-12 rounded-2xl overflow-hidden ring-2 ring-primary/30 shadow-lg shadow-primary/20">
             <Image
               src="/logo.png"
@@ -81,7 +83,7 @@ export default function RegisterPage() {
               Create your free account
             </p>
           </div>
-        </div>
+        </Link>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
