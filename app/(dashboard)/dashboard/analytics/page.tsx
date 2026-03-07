@@ -1,5 +1,5 @@
-'use client';
-
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { BudgetChart } from '@/components/dashboard/budget-chart';
 import { OverviewChart } from '@/components/dashboard/overview-chart';
 import { SpendingChart } from '@/components/dashboard/spending-chart';
 import {
@@ -10,56 +10,119 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
+import { prisma } from '@/lib/prisma';
+import { getServerSession } from 'next-auth';
+import { redirect } from 'next/navigation';
 
-const monthlyComparison = [
-  { month: 'Sep', budget: 3700, actual: 4100 },
-  { month: 'Oct', budget: 3700, actual: 5200 },
-  { month: 'Nov', budget: 3700, actual: 4600 },
-  { month: 'Dec', budget: 4000, actual: 6100 },
-  { month: 'Jan', budget: 3700, actual: 4400 },
-  { month: 'Feb', budget: 3700, actual: 4830 },
-];
-
-const CustomTooltip = ({
-  active,
-  payload,
-  label,
-}: {
-  active?: boolean;
-  payload?: Array<{ value: number; name: string; color: string }>;
-  label?: string;
-}) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="rounded-lg border border-border bg-card p-3 shadow-lg text-xs">
-        <p className="font-semibold mb-1">{label}</p>
-        {payload.map((e) => (
-          <div key={e.name} className="flex items-center gap-2">
-            <div
-              className="w-2 h-2 rounded-full"
-              style={{ background: e.color }}
-            />
-            <span className="capitalize text-muted-foreground">{e.name}:</span>
-            <span className="font-medium">${e.value.toLocaleString()}</span>
-          </div>
-        ))}
-      </div>
-    );
+export default async function AnalyticsPage() {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
+    redirect('/login');
   }
-  return null;
-};
 
-export default function AnalyticsPage() {
+  const userId = session.user.id;
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { currency: true },
+  });
+  const currency = user?.currency || 'INR';
+
+  const now = new Date();
+
+  // Monthly Flow (Last 6 Months)
+  const monthlyData = [];
+  const monthlyComparison = [];
+
+  for (let i = 5; i >= 0; i--) {
+    const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const end = new Date(
+      now.getFullYear(),
+      now.getMonth() - i + 1,
+      0,
+      23,
+      59,
+      59
+    );
+
+    const [inc, exp, budgetGroups] = await Promise.all([
+      prisma.transaction.aggregate({
+        where: { userId, type: 'INCOME', date: { gte: start, lte: end } },
+        _sum: { amount: true },
+      }),
+      prisma.transaction.aggregate({
+        where: { userId, type: 'EXPENSE', date: { gte: start, lte: end } },
+        _sum: { amount: true },
+      }),
+      prisma.budget.aggregate({
+        where: { userId },
+        _sum: { amount: true },
+      }),
+    ]);
+
+    const incomeVal = Number(inc._sum.amount || 0);
+    const expensesVal = Number(exp._sum.amount || 0);
+    const budgetVal = Number(budgetGroups._sum.amount || 0) || 50000; // Provide fake budget if none set for chart demo
+
+    const monthStr = start.toLocaleDateString('en-US', { month: 'short' });
+    monthlyData.push({
+      month: monthStr,
+      income: incomeVal,
+      expenses: expensesVal,
+    });
+    monthlyComparison.push({
+      month: monthStr,
+      budget: budgetVal,
+      actual: expensesVal,
+    });
+  }
+
+  // Spending by Category (Current Month)
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const endOfMonth = new Date(
+    now.getFullYear(),
+    now.getMonth() + 1,
+    0,
+    23,
+    59,
+    59
+  );
+
+  const categoryGroups = await prisma.transaction.groupBy({
+    by: ['categoryId'],
+    where: {
+      userId,
+      type: 'EXPENSE',
+      date: { gte: startOfMonth, lte: endOfMonth },
+    },
+    _sum: { amount: true },
+  });
+
+  const categoryDetails = await prisma.category.findMany({
+    where: {
+      id: {
+        in: categoryGroups.map((g) => g.categoryId).filter(Boolean) as string[],
+      },
+    },
+  });
+
+  const categories = categoryGroups
+    .map((g) => {
+      const cat = categoryDetails.find((c) => c.id === g.categoryId);
+      return {
+        name: cat?.name || 'Uncategorized',
+        value: Number(g._sum.amount || 0),
+        color: cat?.color || 'oklch(0.6 0.1 240)',
+      };
+    })
+    .filter((c) => c.value > 0)
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 6);
+
+  if (categories.length === 0) {
+    categories.push({ name: 'No spending yet', value: 1, color: '#e5e7eb' });
+  }
+
   return (
     <div className="space-y-6 max-w-[1400px] mx-auto">
       <div>
@@ -78,11 +141,10 @@ export default function AnalyticsPage() {
 
         <TabsContent value="overview" className="space-y-4 mt-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <OverviewChart />
-            <SpendingChart />
+            <OverviewChart data={monthlyData} currency={currency} />
+            <SpendingChart categories={categories} currency={currency} />
           </div>
 
-          {/* Budget vs Actual */}
           <Card className="border-border/50">
             <CardHeader className="pb-4">
               <CardTitle className="text-base font-semibold">
@@ -93,48 +155,8 @@ export default function AnalyticsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={220}>
-                <BarChart
-                  data={monthlyComparison}
-                  margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="var(--border)"
-                    vertical={false}
-                  />
-                  <XAxis
-                    dataKey="month"
-                    tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <YAxis
-                    tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }}
-                    axisLine={false}
-                    tickLine={false}
-                    tickFormatter={(v) => `$${(v / 1000).toFixed(1)}k`}
-                  />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Bar
-                    dataKey="budget"
-                    fill="var(--chart-2)"
-                    radius={[4, 4, 0, 0]}
-                    name="budget"
-                  />
-                  <Bar dataKey="actual" radius={[4, 4, 0, 0]} name="actual">
-                    {monthlyComparison.map((entry, i) => (
-                      <Cell
-                        key={i}
-                        fill={
-                          entry.actual > entry.budget
-                            ? 'var(--chart-5)'
-                            : 'var(--chart-1)'
-                        }
-                      />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+              <BudgetChart data={monthlyComparison} currency={currency} />
+
               <div className="flex items-center gap-4 mt-2 justify-center text-xs text-muted-foreground">
                 <div className="flex items-center gap-1.5">
                   <div className="w-3 h-2 rounded bg-chart-2" />
@@ -154,11 +176,11 @@ export default function AnalyticsPage() {
         </TabsContent>
 
         <TabsContent value="spending" className="mt-4">
-          <SpendingChart />
+          <SpendingChart categories={categories} currency={currency} />
         </TabsContent>
 
         <TabsContent value="trends" className="mt-4">
-          <OverviewChart />
+          <OverviewChart data={monthlyData} currency={currency} />
         </TabsContent>
       </Tabs>
     </div>

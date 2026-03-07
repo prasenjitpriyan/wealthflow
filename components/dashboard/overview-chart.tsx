@@ -18,23 +18,16 @@ import {
   YAxis,
 } from 'recharts';
 
-const monthlyData = [
-  { month: 'Sep', income: 7200, expenses: 4100 },
-  { month: 'Oct', income: 7800, expenses: 5200 },
-  { month: 'Nov', income: 8100, expenses: 4600 },
-  { month: 'Dec', income: 9200, expenses: 6100 },
-  { month: 'Jan', income: 7600, expenses: 4400 },
-  { month: 'Feb', income: 8200, expenses: 4830 },
-];
-
 const CustomTooltip = ({
   active,
   payload,
   label,
+  currency = 'INR',
 }: {
   active?: boolean;
   payload?: Array<{ value: number; name: string; color: string }>;
   label?: string;
+  currency?: string;
 }) => {
   if (active && payload && payload.length) {
     return (
@@ -49,7 +42,13 @@ const CustomTooltip = ({
             <span className="text-muted-foreground capitalize">
               {entry.name}:
             </span>
-            <span className="font-medium">${entry.value.toLocaleString()}</span>
+            <span className="font-medium">
+              {new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency,
+                maximumFractionDigits: 0,
+              }).format(entry.value)}
+            </span>
           </div>
         ))}
       </div>
@@ -58,7 +57,13 @@ const CustomTooltip = ({
   return null;
 };
 
-export function OverviewChart() {
+export function OverviewChart({
+  data,
+  currency = 'INR',
+}: {
+  data: { month: string; income: number; expenses: number }[];
+  currency?: string;
+}) {
   return (
     <Card className="border-border/50">
       <CardHeader className="pb-4">
@@ -92,7 +97,7 @@ export function OverviewChart() {
       <CardContent>
         <ResponsiveContainer width="100%" height={220}>
           <AreaChart
-            data={monthlyData}
+            data={data}
             margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
             <defs>
               <linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1">
@@ -127,9 +132,16 @@ export function OverviewChart() {
               tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }}
               axisLine={false}
               tickLine={false}
-              tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
+              tickFormatter={(v) =>
+                new Intl.NumberFormat('en-US', {
+                  style: 'currency',
+                  currency,
+                  notation: 'compact',
+                  maximumFractionDigits: 1,
+                }).format(v)
+              }
             />
-            <Tooltip content={<CustomTooltip />} />
+            <Tooltip content={<CustomTooltip currency={currency} />} />
             <Area
               type="monotone"
               dataKey="income"

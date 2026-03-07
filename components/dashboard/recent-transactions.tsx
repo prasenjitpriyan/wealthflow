@@ -13,58 +13,20 @@ import { cn } from '@/lib/utils';
 import { ArrowDownRight, ArrowUpRight } from 'lucide-react';
 import Link from 'next/link';
 
-const transactions = [
-  {
-    id: '1',
-    description: 'Netflix Subscription',
-    category: 'Entertainment',
-    amount: -15.99,
-    date: 'Mar 2',
-    emoji: '🎬',
-  },
-  {
-    id: '2',
-    description: 'Freelance Payment',
-    category: 'Income',
-    amount: 2500.0,
-    date: 'Mar 1',
-    emoji: '💼',
-  },
-  {
-    id: '3',
-    description: 'Grocery Store',
-    category: 'Food',
-    amount: -87.34,
-    date: 'Mar 1',
-    emoji: '🛒',
-  },
-  {
-    id: '4',
-    description: 'Electric Bill',
-    category: 'Housing',
-    amount: -142.0,
-    date: 'Feb 28',
-    emoji: '⚡',
-  },
-  {
-    id: '5',
-    description: 'Gym Membership',
-    category: 'Health',
-    amount: -49.99,
-    date: 'Feb 27',
-    emoji: '💪',
-  },
-  {
-    id: '6',
-    description: 'Salary Deposit',
-    category: 'Income',
-    amount: 5700.0,
-    date: 'Feb 25',
-    emoji: '🏦',
-  },
-];
-
-export function RecentTransactions() {
+export function RecentTransactions({
+  transactions,
+  currency = 'INR',
+}: {
+  transactions: {
+    id: string;
+    description: string;
+    category: string;
+    amount: number;
+    date: string;
+    emoji: string;
+  }[];
+  currency?: string;
+}) {
   return (
     <Card className="border-border/50">
       <CardHeader className="pb-3">
@@ -121,7 +83,12 @@ export function RecentTransactions() {
                   ) : (
                     <ArrowDownRight className="w-3.5 h-3.5 text-red-400" />
                   )}
-                  {isIncome ? '+' : '-'}${Math.abs(tx.amount).toFixed(2)}
+                  {isIncome ? '+' : '-'}
+                  {new Intl.NumberFormat('en-US', {
+                    style: 'currency',
+                    currency,
+                    maximumFractionDigits: 2,
+                  }).format(Math.abs(tx.amount))}
                 </div>
               </div>
             );

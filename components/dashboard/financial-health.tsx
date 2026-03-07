@@ -5,32 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { AlertCircle, ShieldCheck, Sparkles, TrendingUp } from 'lucide-react';
 
-const score = 78;
-
-const factors = [
-  {
-    label: 'Savings Rate',
-    value: 41,
-    status: 'good',
-    note: '41% — excellent',
-    icon: TrendingUp,
-  },
-  {
-    label: 'Budget Adherence',
-    value: 72,
-    status: 'medium',
-    note: '3 budgets over limit',
-    icon: AlertCircle,
-  },
-  {
-    label: 'Emergency Fund',
-    value: 60,
-    status: 'medium',
-    note: '2.4 months saved',
-    icon: ShieldCheck,
-  },
-];
-
 function getScoreColor(s: number) {
   if (s >= 80) return 'text-emerald-500';
   if (s >= 60) return 'text-amber-500';
@@ -43,7 +17,25 @@ function getScoreLabel(s: number) {
   return { label: 'Needs Work', variant: 'destructive' as const };
 }
 
-export function FinancialHealthScore() {
+const getIconForLabel = (label: string) => {
+  if (label.includes('Savings')) return TrendingUp;
+  if (label.includes('Budget')) return AlertCircle;
+  if (label.includes('Emergency')) return ShieldCheck;
+  return TrendingUp;
+};
+
+export function FinancialHealthScore({
+  score,
+  factors,
+}: {
+  score: number;
+  factors: {
+    label: string;
+    value: number;
+    status: 'good' | 'medium' | 'bad';
+    note: string;
+  }[];
+}) {
   const { label, variant } = getScoreLabel(score);
 
   return (
@@ -104,7 +96,10 @@ export function FinancialHealthScore() {
             <div key={f.label}>
               <div className="flex justify-between items-center text-xs mb-1">
                 <div className="flex items-center gap-1.5 text-muted-foreground">
-                  <f.icon className="w-3.5 h-3.5" />
+                  {(() => {
+                    const Icon = getIconForLabel(f.label);
+                    return <Icon className="w-3.5 h-3.5" />;
+                  })()}
                   {f.label}
                 </div>
                 <span

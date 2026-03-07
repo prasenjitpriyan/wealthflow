@@ -10,23 +10,16 @@ import {
 import { Progress } from '@/components/ui/progress';
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 
-const categories = [
-  { name: 'Housing', value: 1500, color: 'var(--chart-1)' },
-  { name: 'Food', value: 820, color: 'var(--chart-2)' },
-  { name: 'Transport', value: 390, color: 'var(--chart-3)' },
-  { name: 'Shopping', value: 640, color: 'var(--chart-4)' },
-  { name: 'Health', value: 280, color: 'var(--chart-5)' },
-  { name: 'Other', value: 200, color: 'oklch(0.6 0.1 240)' },
-];
-
-const total = categories.reduce((acc, c) => acc + c.value, 0);
-
 const CustomTooltip = ({
   active,
   payload,
+  total,
+  currency = 'INR',
 }: {
   active?: boolean;
   payload?: Array<{ name: string; value: number; payload: { color: string } }>;
+  total: number;
+  currency?: string;
 }) => {
   if (active && payload && payload.length) {
     const item = payload[0];
@@ -40,8 +33,12 @@ const CustomTooltip = ({
           <span className="font-medium">{item.name}</span>
         </div>
         <p className="text-muted-foreground mt-0.5">
-          ${item.value.toLocaleString()} (
-          {((item.value / total) * 100).toFixed(1)}%)
+          {new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency,
+            maximumFractionDigits: 0,
+          }).format(item.value)}{' '}
+          ({((item.value / total) * 100).toFixed(1)}%)
         </p>
       </div>
     );
@@ -49,7 +46,15 @@ const CustomTooltip = ({
   return null;
 };
 
-export function SpendingChart() {
+export function SpendingChart({
+  categories,
+  currency = 'INR',
+}: {
+  categories: { name: string; value: number; color: string }[];
+  currency?: string;
+}) {
+  const total = categories.reduce((acc, c) => acc + c.value, 0);
+
   return (
     <Card className="border-border/50">
       <CardHeader className="pb-2">
@@ -75,7 +80,9 @@ export function SpendingChart() {
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Pie>
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip
+                content={<CustomTooltip total={total} currency={currency} />}
+              />
             </PieChart>
           </ResponsiveContainer>
         </div>
@@ -93,7 +100,11 @@ export function SpendingChart() {
                   <span className="text-muted-foreground">{cat.name}</span>
                 </div>
                 <span className="font-medium">
-                  ${cat.value.toLocaleString()}
+                  {new Intl.NumberFormat('en-US', {
+                    style: 'currency',
+                    currency,
+                    maximumFractionDigits: 0,
+                  }).format(cat.value)}
                 </span>
               </div>
               <Progress
