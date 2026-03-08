@@ -24,8 +24,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Loader2, Plus, Tag, Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Loader2, Plus, Sparkles, Tag, Trash2 } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 
 const EMOJI_OPTIONS = [
   '📁',
@@ -43,6 +44,7 @@ const EMOJI_OPTIONS = [
   '🎵',
   '🐾',
   '🌱',
+  '🚬',
 ];
 const COLOR_OPTIONS = [
   '#6366f1',
@@ -64,17 +66,323 @@ interface Category {
   _count: { transactions: number };
 }
 
+type Suggestion = { icon: string; color: string; type: string };
+
+const RULES: Array<{ keywords: string[]; suggestion: Suggestion }> = [
+  // INCOME
+  {
+    keywords: ['salary', 'wage', 'payroll', 'income', 'paycheck', 'pay'],
+    suggestion: { icon: '💰', color: '#10b981', type: 'INCOME' },
+  },
+  {
+    keywords: ['freelance', 'consulting', 'contract', 'gig', 'side', 'hustle'],
+    suggestion: { icon: '💼', color: '#10b981', type: 'INCOME' },
+  },
+  {
+    keywords: [
+      'dividend',
+      'investment',
+      'interest',
+      'returns',
+      'profit',
+      'stock',
+    ],
+    suggestion: { icon: '📈', color: '#10b981', type: 'INCOME' },
+  },
+  {
+    keywords: ['rent income', 'rental income', 'lease income'],
+    suggestion: { icon: '🏠', color: '#10b981', type: 'INCOME' },
+  },
+  {
+    keywords: ['bonus', 'commission', 'tip', 'tips', 'reward', 'gift received'],
+    suggestion: { icon: '💰', color: '#10b981', type: 'INCOME' },
+  },
+  // TRANSFER
+  {
+    keywords: ['transfer', 'wire', 'send money', 'withdraw', 'deposit'],
+    suggestion: { icon: '📁', color: '#6366f1', type: 'TRANSFER' },
+  },
+  // EXPENSE — Food
+  {
+    keywords: [
+      'food',
+      'grocery',
+      'groceries',
+      'supermarket',
+      'restaurant',
+      'dining',
+      'eat',
+      'meal',
+      'lunch',
+      'dinner',
+      'breakfast',
+      'snack',
+      'coffee',
+      'cafe',
+    ],
+    suggestion: { icon: '🍔', color: '#f59e0b', type: 'EXPENSE' },
+  },
+  // EXPENSE — Transport
+  {
+    keywords: [
+      'transport',
+      'car',
+      'fuel',
+      'gas',
+      'petrol',
+      'uber',
+      'taxi',
+      'bus',
+      'train',
+      'subway',
+      'commute',
+      'metro',
+      'auto',
+      'rickshaw',
+      'vehicle',
+      'parking',
+    ],
+    suggestion: { icon: '🚗', color: '#3b82f6', type: 'EXPENSE' },
+  },
+  // EXPENSE — Housing
+  {
+    keywords: [
+      'rent',
+      'mortgage',
+      'housing',
+      'home',
+      'house',
+      'apartment',
+      'electricity',
+      'utility',
+      'water',
+      'maintenance',
+      'repair',
+    ],
+    suggestion: { icon: '🏠', color: '#ef4444', type: 'EXPENSE' },
+  },
+  // EXPENSE — Health
+  {
+    keywords: [
+      'health',
+      'medical',
+      'doctor',
+      'hospital',
+      'pharmacy',
+      'medicine',
+      'drug',
+      'insurance',
+      'dental',
+      'vision',
+      'clinic',
+    ],
+    suggestion: { icon: '💊', color: '#10b981', type: 'EXPENSE' },
+  },
+  // EXPENSE — Travel
+  {
+    keywords: [
+      'travel',
+      'flight',
+      'hotel',
+      'vacation',
+      'holiday',
+      'trip',
+      'airfare',
+      'booking',
+      'accommodation',
+    ],
+    suggestion: { icon: '✈️', color: '#06b6d4', type: 'EXPENSE' },
+  },
+  // EXPENSE — Entertainment
+  {
+    keywords: [
+      'gaming',
+      'game',
+      'netflix',
+      'streaming',
+      'subscription',
+      'entertainment',
+      'movie',
+      'sport',
+      'hobby',
+    ],
+    suggestion: { icon: '🎮', color: '#8b5cf6', type: 'EXPENSE' },
+  },
+  // EXPENSE — Clothing
+  {
+    keywords: [
+      'clothing',
+      'clothes',
+      'fashion',
+      'shopping',
+      'apparel',
+      'shoes',
+      'dress',
+      'outfit',
+      'wear',
+    ],
+    suggestion: { icon: '👗', color: '#ec4899', type: 'EXPENSE' },
+  },
+  // EXPENSE — Education
+  {
+    keywords: [
+      'education',
+      'school',
+      'tuition',
+      'course',
+      'book',
+      'learning',
+      'training',
+      'study',
+      'college',
+      'university',
+    ],
+    suggestion: { icon: '📚', color: '#6366f1', type: 'EXPENSE' },
+  },
+  // EXPENSE — Fitness
+  {
+    keywords: [
+      'gym',
+      'fitness',
+      'workout',
+      'exercise',
+      'sport',
+      'yoga',
+      'wellness',
+    ],
+    suggestion: { icon: '🏋️', color: '#10b981', type: 'EXPENSE' },
+  },
+  // EXPENSE — Music
+  {
+    keywords: ['music', 'spotify', 'concert', 'instrument'],
+    suggestion: { icon: '🎵', color: '#8b5cf6', type: 'EXPENSE' },
+  },
+  // EXPENSE — Pets
+  {
+    keywords: ['pet', 'dog', 'cat', 'vet', 'animal', 'grooming'],
+    suggestion: { icon: '🐾', color: '#f59e0b', type: 'EXPENSE' },
+  },
+  // EXPENSE — Nature
+  {
+    keywords: ['garden', 'plant', 'nature', 'green', 'eco'],
+    suggestion: { icon: '🌱', color: '#10b981', type: 'EXPENSE' },
+  },
+  // EXPENSE — Tobacco / Smoking
+  {
+    keywords: [
+      'cigarette',
+      'cigar',
+      'tobacco',
+      'smoke',
+      'vape',
+      'nicotine',
+      'cigarate',
+      'sigaret',
+    ],
+    suggestion: { icon: '�', color: '#8b5cf6', type: 'EXPENSE' },
+  },
+  // EXPENSE — Alcohol
+  {
+    keywords: [
+      'alcohol',
+      'beer',
+      'wine',
+      'liquor',
+      'bar',
+      'pub',
+      'drink',
+      'spirits',
+    ],
+    suggestion: { icon: '🍔', color: '#ef4444', type: 'EXPENSE' },
+  },
+  // EXPENSE — Beauty & Personal Care
+  {
+    keywords: [
+      'beauty',
+      'salon',
+      'haircut',
+      'hair',
+      'makeup',
+      'cosmetic',
+      'spa',
+      'skincare',
+      'personal care',
+    ],
+    suggestion: { icon: '👗', color: '#ec4899', type: 'EXPENSE' },
+  },
+  // EXPENSE — Taxes
+  {
+    keywords: ['tax', 'taxes', 'gst', 'vat', 'income tax', 'duty'],
+    suggestion: { icon: '📚', color: '#6366f1', type: 'EXPENSE' },
+  },
+  // EXPENSE — Charity & Donations
+  {
+    keywords: [
+      'charity',
+      'donation',
+      'donate',
+      'ngo',
+      'zakat',
+      'tithe',
+      'nonprofit',
+    ],
+    suggestion: { icon: '🌱', color: '#10b981', type: 'EXPENSE' },
+  },
+  // EXPENSE — Tech & Electronics
+  {
+    keywords: [
+      'tech',
+      'gadget',
+      'phone',
+      'laptop',
+      'computer',
+      'electronics',
+      'software',
+      'app',
+      'internet',
+      'wifi',
+      'broadband',
+    ],
+    suggestion: { icon: '🎮', color: '#3b82f6', type: 'EXPENSE' },
+  },
+  // EXPENSE — Kids & Baby
+  {
+    keywords: [
+      'baby',
+      'kids',
+      'child',
+      'toy',
+      'school fee',
+      'daycare',
+      'diaper',
+    ],
+    suggestion: { icon: '📁', color: '#06b6d4', type: 'EXPENSE' },
+  },
+];
+
+function suggestCategory(name: string): Suggestion | null {
+  const lower = name.toLowerCase();
+  for (const rule of RULES) {
+    if (rule.keywords.some((kw) => lower.includes(kw))) {
+      return rule.suggestion;
+    }
+  }
+  return null;
+}
+
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [suggesting, setSuggesting] = useState(false);
   const [form, setForm] = useState({
     name: '',
     icon: '📁',
     color: '#6366f1',
     type: 'EXPENSE',
   });
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   async function fetchCategories() {
     const res = await fetch('/api/categories');
@@ -84,9 +392,60 @@ export default function CategoriesPage() {
   }
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchCategories();
+    (async () => {
+      const res = await fetch('/api/categories');
+      const data = await res.json();
+      setCategories(data.categories ?? []);
+      setLoading(false);
+    })();
   }, []);
+
+  const runSuggest = useCallback(async (name: string) => {
+    if (!name.trim()) return;
+    setSuggesting(true);
+    try {
+      // Try AI first
+      const res = await fetch('/api/categories/suggest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setForm((f) => ({
+          ...f,
+          icon: data.icon || f.icon,
+          color: data.color || f.color,
+          type: data.type || f.type,
+        }));
+        toast.success('AI auto-filled icon & type!');
+        setSuggesting(false);
+        return;
+      }
+    } catch {
+      // AI unavailable — fall through to keyword matching
+    }
+
+    // Keyword-based fallback
+    const suggestion = suggestCategory(name);
+    if (suggestion) {
+      setForm((f) => ({ ...f, ...suggestion }));
+      toast.success('Auto-filled from keyword match!');
+    }
+    setSuggesting(false);
+  }, []);
+
+  // Auto-suggest with debounce whenever name changes
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (!form.name.trim()) return;
+    debounceRef.current = setTimeout(() => {
+      runSuggest(form.name);
+    }, 600);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [form.name, runSuggest]);
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -129,7 +488,15 @@ export default function CategoriesPage() {
             </DialogHeader>
             <form onSubmit={handleCreate} className="space-y-4 mt-2">
               <div className="space-y-2">
-                <Label>Name</Label>
+                <div className="flex items-center justify-between">
+                  <Label>Name</Label>
+                  {suggesting && (
+                    <span className="flex items-center gap-1 text-xs text-primary animate-pulse">
+                      <Sparkles className="w-3 h-3" />
+                      AI suggesting…
+                    </span>
+                  )}
+                </div>
                 <Input
                   value={form.name}
                   onChange={(e) =>

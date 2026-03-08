@@ -68,6 +68,19 @@ model User {
   budgets              Budget[]
   recurringTransactions RecurringTransaction[]
   financialAccounts    FinancialAccount[]
+  insights             FinancialInsight[]
+  @@schema("public")
+}
+
+// ─── Financial Insight ───────────────────────────────────────────────────
+
+model FinancialInsight {
+  id        String   @id @default(cuid())
+  userId    String
+  insights  Json
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@schema("public")
 }
 
