@@ -14,28 +14,32 @@ import { getServerSession } from 'next-auth';
 function Hero() {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-32 pb-16">
-      {/* Animated SVG background lines */}
-      <SvgBackground />
-
-      {/* 3D React Three Fiber Canvas */}
-      <Hero3D />
-
-      {/* Ambient glow */}
-      <div className="absolute inset-0 -z-10">
+      {/* Deep background: ambient glow blobs */}
+      <div className="absolute inset-0 -z-20">
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-primary/15 rounded-full blur-[120px]" />
         <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[300px] bg-violet-600/10 rounded-full blur-[100px]" />
       </div>
 
-      {/* Grid pattern overlay */}
+      {/* Grid pattern (behind SVG & canvas) */}
       <div
-        className="absolute inset-0 -z-10 opacity-[0.03]"
+        className="absolute inset-0 -z-20 opacity-[0.03]"
         style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Cpath d='M0 0h40v40H0z' fill='none'/%3E%3Cpath d='M0 0v40M40 0v40M0 0h40M0 40h40' stroke='white' stroke-width='0.5'/%3E%3C/svg%3E")`,
         }}
       />
 
-      {/* Parallax animated hero text (client component) */}
-      <ParallaxHero />
+      {/* Animated SVG lines (above glow, behind 3D canvas) */}
+      <div className="absolute inset-0 -z-10">
+        <SvgBackground />
+      </div>
+
+      {/* 3D React Three Fiber Canvas — z:0 via inline style, pointer-events-none */}
+      <Hero3D />
+
+      {/* Hero text — above everything */}
+      <div className="relative z-10 w-full">
+        <ParallaxHero />
+      </div>
     </section>
   );
 }
