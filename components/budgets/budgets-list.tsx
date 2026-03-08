@@ -12,7 +12,6 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Progress } from '@/components/ui/progress';
 import {
   Select,
   SelectContent,
@@ -20,11 +19,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { fadeUp, stagger } from '@/lib/animations';
 import { formatCurrency } from '@/lib/currency';
 import { cn } from '@/lib/utils';
+import { motion, useInView } from 'framer-motion';
 import { AlertTriangle, Loader2, PiggyBank, Plus, Trash2 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface Category {
   id: string;
@@ -50,6 +51,98 @@ const defaultForm = {
   alertAt: 80,
 };
 
+function AnimatedBudgetCard({
+  budget,
+  pct,
+  isOver,
+  remaining,
+  currency,
+  onDelete,
+}: {
+  budget: Budget;
+  pct: number;
+  isOver: boolean;
+  remaining: number;
+  currency?: string;
+  onDelete: (id: string) => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref, { once: true, margin: '-30px' });
+
+  const barColor = isOver
+    ? 'bg-destructive'
+    : pct >= 80
+      ? 'bg-amber-500'
+      : 'bg-emerald-500';
+
+  return (
+    <motion.div
+      ref={ref}
+      variants={fadeUp}
+      className="p-4 rounded-xl border border-border/50 hover:border-primary/20 transition-colors bg-card group relative"
+      whileHover={{ y: -4, boxShadow: '0 12px 28px -8px rgba(0,0,0,0.25)' }}
+      transition={{ type: 'spring', stiffness: 300, damping: 22 }}>
+      <motion.button
+        onClick={() => onDelete(budget.id)}
+        className="absolute top-3 right-3 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+        whileHover={{ scale: 1.15, rotate: 8 }}>
+        <Trash2 className="w-3.5 h-3.5" />
+      </motion.button>
+
+      <div className="flex items-center justify-between mb-3 pr-5">
+        <div className="flex items-center gap-2.5">
+          <motion.span
+            className="text-xl"
+            whileHover={{ scale: 1.2, rotate: 10 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 17 }}>
+            {budget.category?.icon ?? '📁'}
+          </motion.span>
+          <div>
+            <p className="text-sm font-semibold">
+              {budget.category?.name ?? 'Budget'}
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {formatCurrency(budget.spent, currency)} of{' '}
+              {formatCurrency(budget.amount, currency)}
+            </p>
+          </div>
+        </div>
+        <Badge
+          variant={isOver ? 'destructive' : 'secondary'}
+          className={cn('text-xs', {
+            'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-0':
+              !isOver && pct < 80,
+            'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-0':
+              !isOver && pct >= 80,
+          })}>
+          {isOver
+            ? `${formatCurrency(Math.abs(remaining), currency)} over`
+            : `${formatCurrency(remaining, currency)} left`}
+        </Badge>
+      </div>
+
+      {/* Animated progress bar */}
+      <div className="relative">
+        <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+          <motion.div
+            className={`h-full rounded-full ${barColor}`}
+            initial={{ width: 0 }}
+            animate={isInView ? { width: `${pct}%` } : { width: 0 }}
+            transition={{
+              duration: 1.1,
+              ease: [0.25, 0.46, 0.45, 0.94],
+              delay: 0.15,
+            }}
+          />
+        </div>
+        <div className="absolute right-0 -top-5 text-[10px] text-muted-foreground">
+          {pct.toFixed(0)}%
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 export function BudgetsList() {
   const { data: session } = useSession();
   const [budgets, setBudgets] = useState<Budget[]>([]);
@@ -72,8 +165,17 @@ export function BudgetsList() {
   }
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchData();
+    (async () => {
+      const [bRes, cRes] = await Promise.all([
+        fetch('/api/budgets'),
+        fetch('/api/categories'),
+      ]);
+      const bData = await bRes.json();
+      const cData = await cRes.json();
+      setBudgets(bData.budgets ?? []);
+      setCategories(cData.categories ?? []);
+      setLoading(false);
+    })();
   }, []);
 
   async function handleCreate(e: React.FormEvent) {
@@ -101,8 +203,12 @@ export function BudgetsList() {
 
   return (
     <div className="space-y-4">
-      {/* Summary */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      {/* Summary cards */}
+      <motion.div
+        className="grid grid-cols-1 sm:grid-cols-3 gap-4"
+        variants={stagger(0, 0.08)}
+        initial="hidden"
+        animate="visible">
         {[
           {
             label: 'Total Budgeted',
@@ -123,27 +229,32 @@ export function BudgetsList() {
                 : 'text-emerald-500',
           },
         ].map((item) => (
-          <Card key={item.label} className="border-border/50">
-            <CardContent className="pt-5">
-              <p className="text-xs text-muted-foreground">{item.label}</p>
-              <p className={cn('text-2xl font-bold mt-1', item.cls)}>
-                {item.value}
-              </p>
-            </CardContent>
-          </Card>
+          <motion.div key={item.label} variants={fadeUp}>
+            <Card className="border-border/50">
+              <CardContent className="pt-5">
+                <p className="text-xs text-muted-foreground">{item.label}</p>
+                <p className={cn('text-2xl font-bold mt-1', item.cls)}>
+                  {item.value}
+                </p>
+              </CardContent>
+            </Card>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
 
       {/* Over-budget alert */}
       {overBudget.length > 0 && (
-        <div className="flex items-center gap-2 bg-destructive/10 border border-destructive/20 rounded-lg px-4 py-3 text-sm text-destructive">
+        <motion.div
+          className="flex items-center gap-2 bg-destructive/10 border border-destructive/20 rounded-lg px-4 py-3 text-sm text-destructive"
+          initial={{ opacity: 0, x: -12 }}
+          animate={{ opacity: 1, x: 0 }}>
           <AlertTriangle className="w-4 h-4 shrink-0" />
           <span>
             {overBudget.length} budget{overBudget.length > 1 ? 's are' : ' is'}{' '}
             over limit:{' '}
             {overBudget.map((b) => b.category?.name ?? 'Unknown').join(', ')}
           </span>
-        </div>
+        </motion.div>
       )}
 
       {/* Budgets Card */}
@@ -264,7 +375,11 @@ export function BudgetsList() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <motion.div
+              className="grid grid-cols-1 md:grid-cols-2 gap-5"
+              variants={stagger(0, 0.08)}
+              initial="hidden"
+              animate="visible">
               {budgets.map((budget) => {
                 const pct =
                   budget.amount > 0
@@ -272,69 +387,19 @@ export function BudgetsList() {
                     : 0;
                 const isOver = budget.spent > budget.amount;
                 const remaining = budget.amount - budget.spent;
-
                 return (
-                  <div
+                  <AnimatedBudgetCard
                     key={budget.id}
-                    className="p-4 rounded-xl border border-border/50 hover:border-primary/20 transition-colors bg-card group relative">
-                    <button
-                      onClick={() => handleDelete(budget.id)}
-                      className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive">
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-
-                    <div className="flex items-center justify-between mb-3 pr-5">
-                      <div className="flex items-center gap-2.5">
-                        <span className="text-xl">
-                          {budget.category?.icon ?? '📁'}
-                        </span>
-                        <div>
-                          <p className="text-sm font-semibold">
-                            {budget.category?.name ?? 'Budget'}
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            {formatCurrency(
-                              budget.spent,
-                              session?.user?.currency
-                            )}{' '}
-                            of{' '}
-                            {formatCurrency(
-                              budget.amount,
-                              session?.user?.currency
-                            )}
-                          </p>
-                        </div>
-                      </div>
-                      <Badge
-                        variant={isOver ? 'destructive' : 'secondary'}
-                        className={cn('text-xs', {
-                          'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-0':
-                            !isOver && pct < 80,
-                          'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-0':
-                            !isOver && pct >= 80,
-                        })}>
-                        {isOver
-                          ? `${formatCurrency(Math.abs(remaining), session?.user?.currency)} over`
-                          : `${formatCurrency(remaining, session?.user?.currency)} left`}
-                      </Badge>
-                    </div>
-
-                    <div className="relative">
-                      <Progress
-                        value={pct}
-                        className={cn(
-                          'h-2',
-                          isOver && '[&>div]:bg-destructive'
-                        )}
-                      />
-                      <div className="absolute right-0 -top-5 text-[10px] text-muted-foreground">
-                        {pct.toFixed(0)}%
-                      </div>
-                    </div>
-                  </div>
+                    budget={budget}
+                    pct={pct}
+                    isOver={isOver}
+                    remaining={remaining}
+                    currency={session?.user?.currency}
+                    onDelete={handleDelete}
+                  />
                 );
               })}
-            </div>
+            </motion.div>
           )}
         </CardContent>
       </Card>

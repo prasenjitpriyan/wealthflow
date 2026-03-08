@@ -2,13 +2,20 @@
 
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
+import { motion, useInView } from 'framer-motion';
 import { AlertCircle, ShieldCheck, Sparkles, TrendingUp } from 'lucide-react';
+import { useRef } from 'react';
 
 function getScoreColor(s: number) {
   if (s >= 80) return 'text-emerald-500';
   if (s >= 60) return 'text-amber-500';
   return 'text-red-500';
+}
+
+function getScoreStroke(s: number) {
+  if (s >= 80) return '#10b981';
+  if (s >= 60) return '#f59e0b';
+  return '#ef4444';
 }
 
 function getScoreLabel(s: number) {
@@ -24,6 +31,8 @@ const getIconForLabel = (label: string) => {
   return TrendingUp;
 };
 
+const circumference = 2 * Math.PI * 26; // r=26 → 163.36
+
 export function FinancialHealthScore({
   score,
   factors,
@@ -37,12 +46,20 @@ export function FinancialHealthScore({
   }[];
 }) {
   const { label, variant } = getScoreLabel(score);
+  const ref = useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref, { once: true, margin: '-40px' });
+
+  const dashOffset = circumference - (score / 100) * circumference;
 
   return (
     <Card className="border-border/50">
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-primary" />
+          <motion.div
+            animate={{ rotate: [0, 15, -15, 0] }}
+            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}>
+            <Sparkles className="w-4 h-4 text-primary" />
+          </motion.div>
           <CardTitle className="text-base font-semibold">
             Financial Health
           </CardTitle>
@@ -51,11 +68,12 @@ export function FinancialHealthScore({
           </Badge>
         </div>
       </CardHeader>
-      <CardContent>
-        {/* Score ring simulation */}
+      <CardContent ref={ref}>
+        {/* Animated score ring */}
         <div className="flex items-center gap-4 mb-4">
           <div className="relative w-16 h-16 shrink-0">
             <svg viewBox="0 0 64 64" className="w-full h-full -rotate-90">
+              {/* Track */}
               <circle
                 cx="32"
                 cy="32"
@@ -64,21 +82,38 @@ export function FinancialHealthScore({
                 stroke="var(--muted)"
                 strokeWidth="8"
               />
-              <circle
+              {/* Animated arc */}
+              <motion.circle
                 cx="32"
                 cy="32"
                 r="26"
                 fill="none"
-                stroke="var(--primary)"
+                stroke={getScoreStroke(score)}
                 strokeWidth="8"
-                strokeDasharray={`${(score / 100) * 163.4} 163.4`}
                 strokeLinecap="round"
+                strokeDasharray={circumference}
+                initial={{ strokeDashoffset: circumference }}
+                animate={
+                  isInView
+                    ? { strokeDashoffset: dashOffset }
+                    : { strokeDashoffset: circumference }
+                }
+                transition={{
+                  duration: 1.5,
+                  ease: [0.25, 0.46, 0.45, 0.94],
+                  delay: 0.2,
+                }}
               />
             </svg>
+            {/* Score number count-up */}
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className={`text-lg font-bold ${getScoreColor(score)}`}>
+              <motion.span
+                className={`text-lg font-bold ${getScoreColor(score)}`}
+                initial={{ opacity: 0 }}
+                animate={isInView ? { opacity: 1 } : {}}
+                transition={{ delay: 0.5 }}>
                 {score}
-              </span>
+              </motion.span>
             </div>
           </div>
           <div>
@@ -92,8 +127,12 @@ export function FinancialHealthScore({
         </div>
 
         <div className="space-y-3">
-          {factors.map((f) => (
-            <div key={f.label}>
+          {factors.map((f, i) => (
+            <motion.div
+              key={f.label}
+              initial={{ opacity: 0, x: -16 }}
+              animate={isInView ? { opacity: 1, x: 0 } : {}}
+              transition={{ delay: 0.3 + i * 0.1 }}>
               <div className="flex justify-between items-center text-xs mb-1">
                 <div className="flex items-center gap-1.5 text-muted-foreground">
                   {(() => {
@@ -113,8 +152,26 @@ export function FinancialHealthScore({
                   {f.note}
                 </span>
               </div>
-              <Progress value={f.value} className="h-1.5" />
-            </div>
+              {/* Animated progress bar */}
+              <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                <motion.div
+                  className={`h-full rounded-full ${
+                    f.status === 'good'
+                      ? 'bg-emerald-500'
+                      : f.status === 'medium'
+                        ? 'bg-amber-500'
+                        : 'bg-red-500'
+                  }`}
+                  initial={{ width: 0 }}
+                  animate={isInView ? { width: `${f.value}%` } : { width: 0 }}
+                  transition={{
+                    duration: 1,
+                    ease: [0.25, 0.46, 0.45, 0.94],
+                    delay: 0.4 + i * 0.1,
+                  }}
+                />
+              </div>
+            </motion.div>
           ))}
         </div>
       </CardContent>

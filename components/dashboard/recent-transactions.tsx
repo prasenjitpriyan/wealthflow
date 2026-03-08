@@ -9,7 +9,9 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { slideInLeft } from '@/lib/animations';
 import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
 import { ArrowDownRight, ArrowUpRight } from 'lucide-react';
 import Link from 'next/link';
 
@@ -46,15 +48,23 @@ export function RecentTransactions({
       </CardHeader>
       <CardContent>
         <div className="space-y-1">
-          {transactions.map((tx) => {
+          {transactions.map((tx, i) => {
             const isIncome = tx.amount > 0;
             return (
-              <div
+              <motion.div
                 key={tx.id}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
-                <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center text-base shrink-0">
+                variants={slideInLeft}
+                initial="hidden"
+                animate="visible"
+                transition={{ delay: i * 0.045 }}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+                whileHover={{ x: 4 }}>
+                <motion.div
+                  className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center text-base shrink-0"
+                  whileHover={{ scale: 1.15, rotate: 8 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 18 }}>
                   {tx.emoji}
-                </div>
+                </motion.div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">
                     {tx.description}
@@ -90,7 +100,7 @@ export function RecentTransactions({
                     maximumFractionDigits: 2,
                   }).format(Math.abs(tx.amount))}
                 </div>
-              </div>
+              </motion.div>
             );
           })}
         </div>

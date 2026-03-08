@@ -24,6 +24,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { scaleIn, stagger } from '@/lib/animations';
+import { motion } from 'framer-motion';
 import { Loader2, Plus, Sparkles, Tag, Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -596,38 +598,62 @@ export default function CategoriesPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <motion.div
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+          variants={stagger(0, 0.06)}
+          initial="hidden"
+          animate="visible">
           {categories.map((cat) => (
-            <Card
+            <motion.div
               key={cat.id}
-              className="border-border/50 hover:border-primary/20 transition-colors group">
-              <CardHeader className="pb-2">
-                <div className="flex items-start justify-between">
-                  <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center text-xl"
-                    style={{ background: `${cat.color}20` }}>
-                    {cat.icon}
+              variants={scaleIn}
+              whileHover={{
+                y: -6,
+                boxShadow: `0 16px 32px -8px ${cat.color}40`,
+              }}
+              transition={{ type: 'spring', stiffness: 300, damping: 22 }}>
+              <Card className="border-border/50 hover:border-primary/20 transition-colors group h-full">
+                <CardHeader className="pb-2">
+                  <div className="flex items-start justify-between">
+                    <motion.div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center text-xl"
+                      style={{ background: `${cat.color}20` }}
+                      whileHover={{ scale: 1.18, rotate: 10 }}
+                      transition={{
+                        type: 'spring',
+                        stiffness: 400,
+                        damping: 17,
+                      }}>
+                      {cat.icon}
+                    </motion.div>
+                    <motion.button
+                      onClick={() => handleDelete(cat.id)}
+                      className="text-muted-foreground hover:text-destructive"
+                      initial={{ opacity: 0, scale: 0.7 }}
+                      whileHover={{ scale: 1.15 }}
+                      animate={{ opacity: 0 }}
+                      whileFocus={{ opacity: 1 }}
+                      style={{ cursor: 'pointer' }}
+                      // group-hover managed by CSS below
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </motion.button>
                   </div>
-                  <button
-                    onClick={() => handleDelete(cat.id)}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive">
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-                <CardTitle className="text-sm mt-2">{cat.name}</CardTitle>
-                <CardDescription className="text-xs capitalize">
-                  {cat.type.toLowerCase()}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <p className="text-xs text-muted-foreground">
-                  {cat._count.transactions} transaction
-                  {cat._count.transactions !== 1 ? 's' : ''}
-                </p>
-              </CardContent>
-            </Card>
+                  <CardTitle className="text-sm mt-2">{cat.name}</CardTitle>
+                  <CardDescription className="text-xs capitalize">
+                    {cat.type.toLowerCase()}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <p className="text-xs text-muted-foreground">
+                    {cat._count.transactions} transaction
+                    {cat._count.transactions !== 1 ? 's' : ''}
+                  </p>
+                </CardContent>
+              </Card>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       )}
     </div>
   );
