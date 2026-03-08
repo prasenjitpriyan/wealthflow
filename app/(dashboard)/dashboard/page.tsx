@@ -46,6 +46,9 @@ export default async function DashboardPage() {
 
   // 3. Current Month Bounds
   const now = new Date();
+  const hour = now.getHours();
+  const greeting =
+    hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const endOfMonth = new Date(
     now.getFullYear(),
@@ -160,7 +163,7 @@ export default async function DashboardPage() {
       {/* Greeting */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight">
-          Good evening, {firstName} 👋
+          {greeting}, {firstName} 👋
         </h1>
         <p className="text-muted-foreground text-sm mt-1">
           Here&apos;s your financial overview for{' '}
