@@ -628,17 +628,12 @@ export default function CategoriesPage() {
                     </motion.div>
                     <motion.button
                       onClick={() => handleDelete(cat.id)}
-                      className="text-muted-foreground hover:text-destructive"
-                      initial={{ opacity: 0, scale: 0.7 }}
-                      whileHover={{ scale: 1.15 }}
-                      animate={{ opacity: 0 }}
-                      whileFocus={{ opacity: 1 }}
-                      style={{ cursor: 'pointer' }}
-                      // group-hover managed by CSS below
-                    >
+                      className="text-muted-foreground hover:text-destructive absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                      whileHover={{ scale: 1.15, rotate: 8 }}>
                       <Trash2 className="w-4 h-4" />
                     </motion.button>
                   </div>
+
                   <CardTitle className="text-sm mt-2">{cat.name}</CardTitle>
                   <CardDescription className="text-xs capitalize">
                     {cat.type.toLowerCase()}
