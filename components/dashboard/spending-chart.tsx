@@ -56,7 +56,7 @@ export function SpendingChart({
   const total = categories.reduce((acc, c) => acc + c.value, 0);
 
   return (
-    <Card className="border-border/50">
+    <Card animatedBorder className="border-border/50">
       <CardHeader className="pb-2">
         <CardTitle className="text-base font-semibold">
           Spending by Category

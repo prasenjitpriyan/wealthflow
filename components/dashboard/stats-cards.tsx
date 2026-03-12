@@ -158,7 +158,7 @@ export function StatsCards() {
             boxShadow: `0 16px 32px -8px ${cardColors[i].glow}28`,
           }}
           transition={{ type: 'spring', stiffness: 300, damping: 22 }}>
-          <Card className="relative overflow-hidden border-border/50 hover:border-primary/20 transition-colors duration-200 group h-full">
+          <Card animatedBorder className="relative overflow-hidden border-border/50 hover:border-primary/20 transition-colors duration-200 group h-full">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 {card.title}

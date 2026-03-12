@@ -65,7 +65,7 @@ export function OverviewChart({
   currency?: string;
 }) {
   return (
-    <Card className="border-border/50">
+    <Card animatedBorder className="border-border/50">
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <div>

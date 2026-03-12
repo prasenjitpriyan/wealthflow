@@ -52,7 +52,7 @@ export function FinancialHealthScore({
   const dashOffset = circumference - (score / 100) * circumference;
 
   return (
-    <Card className="border-border/50">
+    <Card animatedBorder className="border-border/50">
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2">
           <motion.div

@@ -123,3 +123,16 @@
     @apply bg-background text-foreground;
   }
 }
+
+@keyframes svg-border {
+  0% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: 300;
+  }
+}
+
+.animate-svg-border {
+  animation: svg-border linear infinite;
+}

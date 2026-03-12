@@ -1,17 +1,27 @@
 import * as React from "react"
+import { AnimatedBorder } from "./animated-border"
 
 import { cn } from "@/lib/utils"
 
-function Card({ className, ...props }: React.ComponentProps<"div">) {
+interface CardProps extends React.ComponentProps<"div"> {
+  animatedBorder?: boolean;
+}
+
+function Card({ className, animatedBorder, ...props }: CardProps) {
   return (
     <div
       data-slot="card"
       className={cn(
-        "flex flex-col gap-6 rounded-xl border bg-card py-6 text-card-foreground shadow-sm",
+        "relative flex flex-col gap-6 rounded-xl border bg-card py-6 text-card-foreground shadow-sm overflow-hidden group",
         className
       )}
       {...props}
-    />
+    >
+      {animatedBorder && <AnimatedBorder />}
+      <div className="relative z-10 flex flex-col gap-6 h-full w-full">
+        {props.children}
+      </div>
+    </div>
   )
 }
 
