@@ -14,10 +14,11 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
-import { Bell, LogOut, Menu, Search, Settings, User } from 'lucide-react';
+import { LogOut, Menu, Search, Settings, User } from 'lucide-react';
 import { signOut, useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useState } from 'react';
+import { NotificationBell } from './notification-bell';
 
 export function Header() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -57,10 +58,7 @@ export function Header() {
 
           <div className="ml-auto flex items-center gap-2">
             {/* Notifications */}
-            <Button variant="ghost" size="icon" className="h-9 w-9 relative">
-              <Bell className="h-4 w-4" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full" />
-            </Button>
+            <NotificationBell />
 
             {/* Theme toggle */}
             <ThemeToggle />
