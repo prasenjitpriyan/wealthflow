@@ -4,10 +4,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { getServerSession } from 'next-auth';
 import { NextResponse } from 'next/server';
 
-let genAI: GoogleGenerativeAI | null = null;
-if (process.env.GEMINI_API_KEY) {
-  genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-}
+import fs from 'fs';
 
 export async function GET(req: Request) {
   const session = await getServerSession(authOptions);
@@ -128,15 +125,21 @@ export async function GET(req: Request) {
       });
     }
 
-    if (!genAI) {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
       return NextResponse.json(
         { error: 'Gemini API key not configured' },
         { status: 500 }
       );
     }
+    const genAI = new GoogleGenerativeAI(apiKey);
 
-    // 3. Ask Gemini for insights
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ 
+      model: 'gemini-2.5-flash',
+      generationConfig: {
+        responseMimeType: 'application/json'
+      }
+    });
 
     const prompt = `You are an expert AI financial advisor integrated into a personal finance dashboard. Analyze the user's recent transactions, income, and budgets, and provide 3-4 highly specific, actionable, and personalized insights.
 
@@ -177,7 +180,7 @@ ${JSON.stringify(promptData)}`;
         parsedInsights = [parsed];
       }
     } catch (e) {
-      console.error('Failed to parse Gemini JSON', e, cleaned);
+      console.error('Failed to parse Gemini JSON', e, text);
       throw new Error('Failed to parse AI output');
     }
 
@@ -194,10 +197,14 @@ ${JSON.stringify(promptData)}`;
       generatedAt: savedInsight.createdAt,
       cached: false,
     });
-  } catch (error) {
+  } catch (error: Error | any) {
     console.error('AI Insights API Error:', error);
+    try {
+      fs.appendFileSync('debug-insights.log', new Date().toISOString() + ' ' + (error.stack || error.toString()) + '\n');
+    } catch(fsError) {}
+    
     return NextResponse.json(
-      { error: 'Failed to generate insights' },
+      { error: 'Failed to generate insights', details: error.message },
       { status: 500 }
     );
   }

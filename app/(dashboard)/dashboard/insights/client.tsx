@@ -12,7 +12,8 @@ import {
   Sparkles,
   TrendingDown,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 const iconStyles: Record<string, string> = {
   warning: 'text-amber-500 bg-amber-500/10',
@@ -57,22 +58,28 @@ export function InsightsClient({
       const res = await fetch(
         `/api/dashboard/insights${force ? '?force=true' : ''}`
       );
-      if (!res.ok) throw new Error('Failed to fetch insights');
       const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to fetch insights');
+      }
       setInsights(data.insights || []);
       setLastGenerated(new Date(data.generatedAt));
-    } catch (e) {
+    } catch (e: unknown) {
       console.error(e);
-      // Fallback if needed
+      const err = e as Error;
+      toast.error(err.message || 'Something went wrong while fetching insights');
     } finally {
       setIsLoading(false);
     }
   };
 
   // If no initial insights, fetch them on mount (e.g. first time user visits)
-  if (!initialInsights && insights.length === 0 && !isLoading) {
-    fetchInsights();
-  }
+  useEffect(() => {
+    if (!initialInsights && insights.length === 0) {
+      fetchInsights();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <>
