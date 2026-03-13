@@ -24,6 +24,7 @@ export function RecentTransactions({
     description: string;
     category: string;
     amount: number;
+    type: string;
     date: string;
     emoji: string;
   }[];
@@ -49,7 +50,7 @@ export function RecentTransactions({
       <CardContent>
         <div className="space-y-1">
           {transactions.map((tx, i) => {
-            const isIncome = tx.amount > 0;
+            const isIncome = tx.type === 'INCOME';
             return (
               <motion.div
                 key={tx.id}

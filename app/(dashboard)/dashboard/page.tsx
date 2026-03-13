@@ -37,6 +37,7 @@ export default async function DashboardPage() {
     description: tx.description,
     category: tx.category?.name || 'Uncategorized',
     amount: Number(tx.amount),
+    type: tx.type,
     date: tx.date.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
