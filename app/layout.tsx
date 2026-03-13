@@ -2,6 +2,7 @@ import { AuthProvider } from '@/components/auth-provider';
 import { ThemeProvider } from '@/components/theme-provider';
 import type { Metadata } from 'next';
 import { Plus_Jakarta_Sans } from 'next/font/google';
+import Script from 'next/script';
 import { Toaster } from 'sonner';
 import './globals.css';
 
@@ -85,6 +86,10 @@ export default function RootLayout({
           <AuthProvider>{children}</AuthProvider>
           <Toaster richColors position="bottom-right" />
         </ThemeProvider>
+        <Script
+          src="https://checkout.razorpay.com/v1/checkout.js"
+          strategy="lazyOnload"
+        />
       </body>
     </html>
   );

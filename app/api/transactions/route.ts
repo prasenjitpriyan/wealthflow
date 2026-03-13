@@ -55,6 +55,25 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
+    // Enforce Free plan limit
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { plan: true },
+    });
+    if (user?.plan === 'FREE') {
+      const now = new Date();
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const count = await prisma.transaction.count({
+        where: { userId: session.user.id, date: { gte: monthStart } },
+      });
+      if (count >= 50) {
+        return NextResponse.json(
+          { error: 'Monthly transaction limit reached. Upgrade to Pro for unlimited transactions.', code: 'PLAN_LIMIT_REACHED' },
+          { status: 402 }
+        );
+      }
+    }
+
     const body = await req.json();
     const data = createSchema.parse(body);
 

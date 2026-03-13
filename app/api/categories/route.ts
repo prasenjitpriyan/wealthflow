@@ -31,6 +31,21 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
+    // Enforce Free plan limit
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { plan: true },
+    });
+    if (user?.plan === 'FREE') {
+      const count = await prisma.category.count({ where: { userId: session.user.id } });
+      if (count >= 3) {
+        return NextResponse.json(
+          { error: 'Category limit reached. Upgrade to Pro for unlimited categories.', code: 'PLAN_LIMIT_REACHED' },
+          { status: 402 }
+        );
+      }
+    }
+
     const body = await req.json();
     const data = createSchema.parse(body);
 
@@ -52,3 +67,4 @@ export async function POST(req: Request) {
     );
   }
 }
+

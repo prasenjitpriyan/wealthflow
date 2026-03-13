@@ -21,6 +21,7 @@ import { Separator } from '@/components/ui/separator';
 import { Loader2, Save, Settings } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
+import { BillingCard } from '@/components/settings/billing-card';
 
 const CURRENCIES = ['USD', 'EUR', 'GBP', 'INR', 'JPY', 'CAD', 'AUD', 'SGD'];
 
@@ -150,6 +151,11 @@ export default function SettingsPage() {
           </Button>
         </CardContent>
       </Card>
+
+      <Separator />
+
+      {/* Billing */}
+      <BillingCard />
     </div>
   );
 }
