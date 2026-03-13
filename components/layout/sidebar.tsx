@@ -1,6 +1,5 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
@@ -12,7 +11,6 @@ import {
   Sparkles,
   Tag,
   TrendingUp,
-  X,
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -63,15 +61,6 @@ export function Sidebar({ onClose }: SidebarProps) {
             Wealth<span className="text-primary">Flow</span>
           </span>
         </Link>
-        {onClose && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 lg:hidden"
-            onClick={onClose}>
-            <X className="h-4 w-4" />
-          </Button>
-        )}
       </motion.div>
 
       <Separator className="bg-sidebar-border" />
