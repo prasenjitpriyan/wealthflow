@@ -1,8 +1,8 @@
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import { Session } from 'next-auth';
-import Image from 'next/image';
 import Link from 'next/link';
+import { Logo } from '@/components/ui/logo';
 
 export function LandingNavbar({ session }: { session: Session | null }) {
   return (
@@ -11,13 +11,7 @@ export function LandingNavbar({ session }: { session: Session | null }) {
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 group">
           <div className="w-8 h-8 rounded-xl overflow-hidden ring-2 ring-primary/20 group-hover:ring-primary/50 transition-all">
-            <Image
-              src="/logo.png"
-              alt="WealthFlow Logo"
-              width={32}
-              height={32}
-              className="object-cover"
-            />
+            <Logo className="w-full h-full p-1" />
           </div>
           <span className="font-bold text-lg tracking-tight">
             Wealth<span className="text-primary">Flow</span>

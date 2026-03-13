@@ -5,9 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Eye, EyeOff, Github, Loader2, LogIn, Sparkles } from 'lucide-react';
 import { signIn } from 'next-auth/react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Logo } from '@/components/ui/logo';
 import { useState } from 'react';
 
 export default function LoginPage() {
@@ -46,13 +46,7 @@ export default function LoginPage() {
           href="/"
           className="flex flex-col items-center gap-3 hover:opacity-90 transition-opacity">
           <div className="w-12 h-12 rounded-2xl overflow-hidden ring-2 ring-primary/30 shadow-lg shadow-primary/20">
-            <Image
-              src="/logo.png"
-              alt="WealthFlow"
-              width={48}
-              height={48}
-              className="object-cover"
-            />
+            <Logo className="w-full h-full p-1.5" />
           </div>
           <div className="text-center">
             <h1 className="text-2xl font-bold tracking-tight">

@@ -12,9 +12,9 @@ import {
   Tag,
   TrendingUp,
 } from 'lucide-react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { Logo } from '@/components/ui/logo';
 
 const navItems = [
   { title: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -49,13 +49,7 @@ export function Sidebar({ onClose }: SidebarProps) {
             className="w-8 h-8 rounded-xl overflow-hidden ring-2 ring-primary/20 group-hover:ring-primary/40 transition-all shrink-0"
             whileHover={{ scale: 1.08, rotate: 5 }}
             transition={{ type: 'spring', stiffness: 400, damping: 20 }}>
-            <Image
-              src="/logo.png"
-              alt="WealthFlow"
-              width={32}
-              height={32}
-              className="object-cover"
-            />
+            <Logo className="w-full h-full p-1" />
           </motion.div>
           <span className="font-bold text-lg tracking-tight text-sidebar-foreground">
             Wealth<span className="text-primary">Flow</span>

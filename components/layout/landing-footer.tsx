@@ -1,5 +1,5 @@
-import Image from 'next/image';
 import Link from 'next/link';
+import { Logo } from '@/components/ui/logo';
 
 export function LandingFooter() {
   return (
@@ -7,13 +7,7 @@ export function LandingFooter() {
       <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-lg overflow-hidden">
-            <Image
-              src="/logo.png"
-              alt="WealthFlow"
-              width={24}
-              height={24}
-              className="object-cover"
-            />
+            <Logo className="w-full h-full p-0.5" />
           </div>
           <span className="text-sm font-semibold">
             Wealth<span className="text-primary">Flow</span>
