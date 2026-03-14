@@ -97,41 +97,21 @@ export default async function DashboardPage() {
     categories.push({ name: 'No spending yet', value: 1, color: '#e5e7eb' });
   }
 
-  // 5. Monthly Flow (Last 6 Months)
-  const monthlyData = [];
-  for (let i = 5; i >= 0; i--) {
-    const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const end = new Date(
-      now.getFullYear(),
-      now.getMonth() - i + 1,
-      0,
-      23,
-      59,
-      59
-    );
-
-    const [inc, exp] = await Promise.all([
-      prisma.transaction.aggregate({
-        where: { userId, type: 'INCOME', date: { gte: start, lte: end } },
-        _sum: { amount: true },
-      }),
-      prisma.transaction.aggregate({
-        where: { userId, type: 'EXPENSE', date: { gte: start, lte: end } },
-        _sum: { amount: true },
-      }),
-    ]);
-
-    monthlyData.push({
-      month: start.toLocaleDateString('en-US', { month: 'short' }),
-      income: Number(inc._sum.amount || 0),
-      expenses: Number(exp._sum.amount || 0),
-    });
-  }
+  // 5. Current Month Income/Expenses (for Financial Health Score)
+  const [currentMonthInc, currentMonthExp] = await Promise.all([
+    prisma.transaction.aggregate({
+      where: { userId, type: 'INCOME', date: { gte: startOfMonth, lte: endOfMonth } },
+      _sum: { amount: true },
+    }),
+    prisma.transaction.aggregate({
+      where: { userId, type: 'EXPENSE', date: { gte: startOfMonth, lte: endOfMonth } },
+      _sum: { amount: true },
+    }),
+  ]);
 
   // 6. Financial Health Metrics
-  // Calculate basic savings rate for the month
-  const currentInc = monthlyData[5].income;
-  const currentExp = monthlyData[5].expenses;
+  const currentInc = Number(currentMonthInc._sum.amount ?? 0);
+  const currentExp = Number(currentMonthExp._sum.amount ?? 0);
   const savingsRate =
     currentInc > 0
       ? Math.round(((currentInc - currentExp) / currentInc) * 100)
@@ -178,7 +158,7 @@ export default async function DashboardPage() {
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2">
-          <OverviewChart data={monthlyData} currency={currency} />
+          <OverviewChart currency={currency} />
         </div>
         <div>
           <SpendingChart categories={categories} currency={currency} />

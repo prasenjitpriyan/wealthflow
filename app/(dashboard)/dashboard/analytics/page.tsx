@@ -141,7 +141,7 @@ export default async function AnalyticsPage() {
 
         <TabsContent value="overview" className="space-y-4 mt-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <OverviewChart data={monthlyData} currency={currency} />
+            <OverviewChart currency={currency} />
             <SpendingChart categories={categories} currency={currency} />
           </div>
 
@@ -180,7 +180,7 @@ export default async function AnalyticsPage() {
         </TabsContent>
 
         <TabsContent value="trends" className="mt-4">
-          <OverviewChart data={monthlyData} currency={currency} />
+          <OverviewChart currency={currency} />
         </TabsContent>
       </Tabs>
     </div>
