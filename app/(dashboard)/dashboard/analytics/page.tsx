@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { redirect } from 'next/navigation';
+import { Prisma } from '@prisma/client';
 
 export default async function AnalyticsPage() {
   const session = await getServerSession(authOptions);
@@ -107,7 +108,7 @@ export default async function AnalyticsPage() {
   });
 
   const categories = categoryGroups
-    .map((g) => {
+    .map((g: { categoryId: string | null; _sum: { amount: Prisma.Decimal | null } }) => {
       const cat = categoryDetails.find((c) => c.id === g.categoryId);
       return {
         name: cat?.name || 'Uncategorized',
