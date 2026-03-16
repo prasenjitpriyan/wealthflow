@@ -101,7 +101,7 @@ export default async function AnalyticsPage() {
   const categoryDetails = await prisma.category.findMany({
     where: {
       id: {
-        in: categoryGroups.map((g) => g.categoryId).filter(Boolean) as string[],
+        in: categoryGroups.map((g: { categoryId: string | null }) => g.categoryId).filter(Boolean) as string[],
       },
     },
   });
