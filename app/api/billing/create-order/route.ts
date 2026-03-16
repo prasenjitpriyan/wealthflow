@@ -15,7 +15,7 @@ export async function POST() {
     const order = await razorpay.orders.create({
       amount: PRO_AMOUNT,
       currency: 'INR',
-      receipt: `pro_${session.user.id}_${Date.now()}`,
+      receipt: `pro_${session.user.id.slice(-10)}_${Date.now()}`.slice(0, 40),
       notes: {
         userId: session.user.id,
         plan: 'PRO',

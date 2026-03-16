@@ -5,8 +5,11 @@ const globalForPrisma = globalThis as unknown as {
   prisma: ReturnType<typeof makePrismaClient> | undefined;
 };
 
+import { Pool } from 'pg';
+
 function makePrismaClient() {
-  const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
+  const pool = new Pool({ connectionString: process.env.DATABASE_URL! });
+  const adapter = new PrismaPg(pool);
   return new PrismaClient({
     adapter,
     log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
