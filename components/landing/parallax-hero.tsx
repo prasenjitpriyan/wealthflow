@@ -23,7 +23,7 @@ export function ParallaxHero() {
   return (
     <motion.div
       ref={ref}
-      className="max-w-4xl mx-auto px-4 sm:px-6 text-center"
+      className="relative max-w-4xl mx-auto px-4 sm:px-6 text-center"
       style={{ y, opacity }}
       variants={container}
       initial="hidden"
