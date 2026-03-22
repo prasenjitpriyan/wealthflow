@@ -48,28 +48,25 @@ export function AnimatedStats() {
         const stat = stats[i];
         const isDecimal = stat.value % 1 !== 0;
 
-        gsap.from(
-          { val: 0 },
-          {
-            val: stat.value,
-            duration: 1.8,
-            ease: 'power2.out',
-            delay: i * 0.15,
-            scrollTrigger: {
-              trigger: sectionRef.current,
-              start: 'top 80%',
-              toggleActions: 'play none none none',
-            },
-            onUpdate() {
-              if (!el) return;
-              const current = this.targets()[0] as { val: number };
-              const formatted = isDecimal
-                ? current.val.toFixed(1)
-                : Math.round(current.val).toLocaleString();
-              el.textContent = `${stat.prefix ?? ''}${formatted}${stat.suffix}`;
-            },
-          }
-        );
+        const obj = { val: 0 };
+        gsap.to(obj, {
+          val: stat.value,
+          duration: 1.8,
+          ease: 'power2.out',
+          delay: i * 0.15,
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: 'top 80%',
+            toggleActions: 'play none none none',
+          },
+          onUpdate() {
+            if (!el) return;
+            const formatted = isDecimal
+              ? obj.val.toFixed(1)
+              : Math.round(obj.val).toLocaleString();
+            el.textContent = `${stat.prefix ?? ''}${formatted}${stat.suffix}`;
+          },
+        });
       });
     },
     { scope: sectionRef }
